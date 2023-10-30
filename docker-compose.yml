@@ -1,0 +1,11 @@
+version: '3'
+services:
+  node-app:
+    build: .
+    environment:
+      - NODE_ENV=production
+      - LOG_DIR_PATH=/hostfs/var/log/
+    ports:
+      - "3001:3001"
+    volumes:
+      - /var/log:/hostfs/var/log/:ro
