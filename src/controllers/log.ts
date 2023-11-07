@@ -26,17 +26,21 @@ export const processLogFile = async (req: Request, res: Response) => {
     }
 
     const userFilePath = logPath(userFileName);
-
     // Validate the user Input path
     try {
         await promises.access(userFilePath, constants.R_OK);
+
+        const stats = await promises.stat(userFilePath);
+        if (!stats.isFile()) {
+            return res.status(500).json({ error: 'Requested file is not a file' });
+        }
     } catch (err: unknown) {
         if (isErrnoException(err)) {
             if (err.code === 'EPERM') {
                 return res.status(403).json({ error: 'Access to file is denied' });
             }
             if (err.code === 'ENOENT') {
-                return res.status(404).json({ error: 'file not found' });
+                return res.status(404).json({ error: 'Requested file not found' });
             }
         }
         return res.status(400).json({ error: err });
