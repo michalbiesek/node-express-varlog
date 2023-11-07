@@ -2,24 +2,31 @@
 import { Readable, ReadableOptions } from "stream";
 import * as fs from 'fs';
 
-export function createBackwardReadStream(path: string, opts?: ReadableOptions): BackwardReadStream {
-  return new BackwardReadStream(path, opts);
+export function createBackwardReadStream(path: string, lineLimit: boolean, startLineOffset?:number, opts?: ReadableOptions): BackwardReadStream {
+  return new BackwardReadStream(path, lineLimit, startLineOffset, opts);
 }
 
 const NEWLINE_SEPARATOR = '\n';
+const DEFAULT_LINE_LIMIT = 1000000;
 
 class BackwardReadStream extends Readable {
-  private incompleteData: string;     // store the incomplete data
-  private fileOffset: number;         // file offset
-  private fileName: string;           // file Name
-  private fd: number | null;          // file descriptor
+  private incompleteData: string;         // store the incomplete data
+  private fileOffset: number;             // file offset
+  private fileName: string;               // file Name
+  private fd: number | null;              // file descriptor
+  private startLineOffset: number;        // start line offset
+  private currentLineOffset: number;      // current line offset
+  private lineLimit: undefined | number;  // line limit
 
-  constructor(filename: string, opts?: ReadableOptions) {
+  constructor(filename: string, lineLimitEnable: boolean, startOffset?: number, opts?: ReadableOptions) {
     super(opts);
     this.incompleteData = '';
     this.fileName = filename;
     this.fd = null;
     this.fileOffset = 0;
+    this.lineLimit = lineLimitEnable ? DEFAULT_LINE_LIMIT : undefined;
+    this.startLineOffset = startOffset || 0;
+    this.currentLineOffset = 0;
   }
 
   /**
@@ -78,11 +85,25 @@ class BackwardReadStream extends Readable {
 
     // Flush the remaining lines
     splittedLines.reverse().forEach(element => {
+      // Handle everything above the startOffset
+      if (this.currentLineOffset >= this.startLineOffset) {
       // Skip the empty element
-      if (element !== '') {
-        this.push(element + NEWLINE_SEPARATOR);
-        pushedData = true;
+        if (element !== '') {
+          this.push(element + NEWLINE_SEPARATOR);
+          pushedData = true;
+
+          // Stop parsing in case of limit was reached
+          if (this.lineLimit !== undefined) {
+            this.lineLimit -= 1;
+            if (this.lineLimit === 0) {
+              this.push(`{offset = ${this.currentLineOffset} }`);
+              this.destroy();
+              this.push(null);
+            }
+          }
+        }
       }
+      this.currentLineOffset += 1;
     });
 
     return pushedData;

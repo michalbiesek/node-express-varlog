@@ -20,7 +20,7 @@ describe('BackwardReadStream', () => {
             // Write the test data to the temporary file
             fs.writeFileSync(tempFile.name, testStr);
 
-            const stream = createBackwardReadStream(tempFile.name, { highWaterMark: highWaterMark });
+            const stream = createBackwardReadStream(tempFile.name, true, undefined, { highWaterMark: highWaterMark });
 
             // Create a buffer to hold the data read from the stream
             let dataBuffer = Buffer.from('');
@@ -49,7 +49,7 @@ describe('BackwardReadStream', () => {
             callback(new Error('Simulated open error'), -1);
           });
     
-        const stream = createBackwardReadStream(tempFile.name);
+        const stream = createBackwardReadStream(tempFile.name, true ,undefined);
     
         stream.on('error', (error) => {
           expect(error.message).toBe('Simulated open error');

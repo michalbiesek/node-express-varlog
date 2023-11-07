@@ -89,3 +89,26 @@ Retrieve a specific log file (e.g. auth.log) where entries contains `system-logi
 ```
     curl "http://localhost:3001/logs?file=auth.log&keyword=systemd-logind"
 ```
+
+To handle big file a line offset(line paging) mechanism is introduced (e.g. big_file.log)
+
+```
+    curl "http://localhost:3001/logs?file=big_file"
+```
+
+
+```
+Nov 01 00:00:00 Lorem Ipsum log
+{offset=1000000}
+```
+
+The value from offset can be used in the next query to start retrieving data from the specified line offset.
+```
+    curl "http://localhost:3001/logs?file=big_file&offset=1000000"
+```
+
+By default, the limit for parsed lines is hardcoded to 1,000,000. If you want to exceed this limit, you can pass n=-1 in the query.
+
+```
+    curl "http://localhost:3001/logs?file=big_file&n=-1"
+```

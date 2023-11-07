@@ -5,12 +5,22 @@ import { isErrnoException } from '../util/isErrnoException';
 import { logPath } from '../configuration/cfg';
 import { createBackwardReadStream } from '../stream/backwardReadStream';
 
+const DISABLE_LINE_LIMIT = -1;
+
+function handleEntries(query:string) :number {
+    const res =  parseInt(query, 10);
+    return res === DISABLE_LINE_LIMIT ? Number.MAX_VALUE : res;
+}
+    
 // Process Log file
 export const processLogFile = async (req: Request, res: Response) => {
     const userFileName = req.query.file;
     const queryN = req.query.n;
-    const numberEntries = (typeof queryN === 'string') ? parseInt(queryN, 10) : Number.MAX_VALUE;
+    const numberEntries = (typeof queryN === 'string') ? handleEntries(queryN) : Number.MAX_VALUE;
+    const enableLimit = (typeof queryN === 'undefined');
     const keyWord = (typeof req.query.keyword === 'string') ? req.query.keyword : "";
+    const queryOffset = req.query.offset;
+    const offset = (typeof queryOffset === 'string') ? parseInt(queryOffset, 10) : undefined;
 
     if (!userFileName) {
         return res.status(400).json({ error: 'Bad Request - Missing required data: file' });
@@ -52,7 +62,7 @@ export const processLogFile = async (req: Request, res: Response) => {
     let parsedLinesCounter = 0;
 
     // Create stream and pipe it to write
-    const fStream = createBackwardReadStream(userFilePath);
+    const fStream = createBackwardReadStream(userFilePath, enableLimit, offset);
     fStream.on('error', (err) => {
         console.error('Error:', err);
         res.status(500).end('Internal Server Error');

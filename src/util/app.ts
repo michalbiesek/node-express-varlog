@@ -55,6 +55,12 @@ app.get("/list", varLogController.listLogFiles);
  *         required: false
  *         schema:
  *           type: string
+ *       - in: query
+ *         name: offset
+ *         description: Number of log line offset to start retrieve.
+ *         required: false
+ *         schema:
+ *           type: integer
  *     responses:
  *       200:
  *         description: Log data retrieved successfully.
