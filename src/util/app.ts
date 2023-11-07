@@ -59,16 +59,17 @@ app.get("/list", varLogController.listLogFiles);
  *       200:
  *         description: Log data retrieved successfully.
  *         content:
- *           application/octet-stream:
+ *           text/plain:
  *             schema:
  *               type: string
- *               format: binary
  *       400:
- *         description: Missing required data file name.
+ *         description: Bad request errors for missing or invalid query parameters.
  *       403:
  *         description: Access to file is denied.
  *       404:
  *         description: File is not found.
+ *       500:
+ *         description: Internal Server Error.
  * 
  */
 app.get("/logs", varLogController.processLogFile);
